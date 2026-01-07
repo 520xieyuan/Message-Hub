@@ -40,21 +40,21 @@ An Electron-based desktop application that provides a unified message search exp
 
 ### Install Dependencies
 
-\`\`\`bash
+```bash
 npm install
-\`\`\`
+```
 
 ### Development Mode
 
-\`\`\`bash
+```bash
 npm run dev
-\`\`\`
+```
 
 This will start both the Vite development server and the Electron application.
 
 ### Build Application
 
-\`\`\`bash
+```bash
 # Build for all platforms
 npm run build:all
 
@@ -62,18 +62,18 @@ npm run build:all
 npm run build:win    # Windows
 npm run build:mac    # macOS
 npm run build:linux  # Linux
-\`\`\`
+```
 
 ## Deployment
 
 ### Desktop Application
 Use the standard Electron build process:
-\`\`\`bash
+```bash
 npm run build
 npm run build:win  # or build:mac, build:linux
-\`\`\`
+```
 
-Distributable files will be in the \`release/\` directory.
+Distributable files will be in the `release/` directory.
 
 ### OAuth Server (Optional)
 
@@ -84,7 +84,7 @@ The OAuth callback server is required for Gmail, Slack, and Lark authentication.
 - MariaDB/MySQL database
 
 **Quick Start:**
-\`\`\`bash
+```bash
 cd oauth-server
 npm install
 
@@ -94,13 +94,13 @@ cp .env.example .env
 
 # Start the server
 npm start
-\`\`\`
+```
 
-The OAuth server will run on \`http://localhost:3000\` by default. See \`oauth-server/README.md\` for detailed configuration.
+The OAuth server will run on `http://localhost:3000` by default. See `oauth-server/README.md` for detailed configuration.
 
 ## Project Structure
 
-\`\`\`
+```
 ├── src/                    # React frontend code
 │   ├── components/         # React components
 │   ├── services/          # Business logic services
@@ -112,7 +112,7 @@ The OAuth server will run on \`http://localhost:3000\` by default. See \`oauth-s
 │   └── utils/            # Main process utilities
 ├── dist/                  # Build output directory
 └── release/              # Package output directory
-\`\`\`
+```
 
 ## Configuration
 
