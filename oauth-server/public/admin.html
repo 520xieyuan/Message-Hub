@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth账户管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .platform-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .platform-gmail {
+            background: #ea4335;
+            color: white;
+        }
+        
+        .platform-slack {
+            background: #4a154b;
+            color: white;
+        }
+        
+        .platform-lark {
+            background: #00d4aa;
+            color: white;
+        }
+        
+        .status-active {
+            color: #27ae60;
+            font-weight: 500;
+        }
+        
+        .status-inactive {
+            color: #e74c3c;
+            font-weight: 500;
+        }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 OAuth账户管理中心</h1>
+            <p>管理OAuth应用配置和用户令牌</p>
+        </div>
+        
+        <!-- 统计信息 -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="stat-apps">-</div>
+                <div class="stat-label">OAuth应用</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat-tokens">-</div>
+                <div class="stat-label">用户令牌</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat-gmail">-</div>
+                <div class="stat-label">Gmail账户</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat-slack">-</div>
+                <div class="stat-label">Slack账户</div>
+            </div>
+        </div>
+        
+        <!-- OAuth应用配置 -->
+        <div class="section">
+            <h2>📱 OAuth应用配置</h2>
+            
+            <div id="app-alert"></div>
+            
+            <form id="oauth-app-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="platform">平台</label>
+                        <select id="platform" required>
+                            <option value="">选择平台</option>
+                            <option value="gmail">Gmail</option>
+                            <option value="slack">Slack</option>
+                            <option value="lark">Lark</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="app-name">应用名称</label>
+                        <input type="text" id="app-name" placeholder="例如: 工作Gmail, 个人Slack" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="client-id">客户端ID</label>
+                        <input type="text" id="client-id" placeholder="输入OAuth客户端ID" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="client-secret">客户端密钥</label>
+                        <input type="password" id="client-secret" placeholder="输入OAuth客户端密钥" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="redirect-uri">重定向URI</label>
+                        <input type="url" id="redirect-uri" placeholder="加载中..." required>
+                        <small style="color: #7f8c8d; display: block; margin-top: 5px;">
+                            💡 提示：将根据当前访问地址自动生成示例。使用 ngrok 时，请通过 ngrok URL 访问此页面
+                        </small>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn">添加OAuth应用</button>
+            </form>
+            
+            <div id="oauth-apps-table">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+        
+        <!-- 用户令牌管理 -->
+        <div class="section">
+            <h2>👤 用户令牌管理</h2>
+
+            <div class="form-group">
+                <label for="search-user">搜索过滤</label>
+                <input type="text" id="search-user" placeholder="输入邮箱或用户标识符进行过滤...">
+            </div>
+
+            <div id="user-tokens-table">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+
+        <!-- LLM 配置 -->
+        <div class="section">
+            <h2>🤖 LLM 总结服务配置</h2>
+            <p style="color: #7f8c8d; margin-bottom: 15px;">配置 AI 总结功能使用的大语言模型服务，所有 Electron 客户端将使用此配置。</p>
+
+            <div id="llm-alert"></div>
+
+            <form id="llm-config-form">
+                <div class="form-group">
+                    <label>服务类型</label>
+                    <div style="display: flex; gap: 20px; margin-top: 5px;">
+                        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                            <input type="radio" name="llm-provider" value="ollama" checked>
+                            <span>Ollama (本地/远程)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                            <input type="radio" name="llm-provider" value="openai">
+                            <span>OpenAI 兼容 (OpenAI/DeepSeek/Moonshot等)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="llm-base-url">服务地址 (Base URL)</label>
+                        <input type="url" id="llm-base-url" placeholder="http://localhost:11434" required>
+                        <small style="color: #7f8c8d; display: block; margin-top: 5px;" id="llm-url-hint">
+                            Ollama 默认: http://localhost:11434
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label for="llm-model">模型名称</label>
+                        <input type="text" id="llm-model" placeholder="qwen2.5:7b" required>
+                        <small style="color: #7f8c8d; display: block; margin-top: 5px;" id="llm-model-hint">
+                            Ollama 示例: qwen2.5:7b, llama3:8b
+                        </small>
+                    </div>
+                </div>
+
+                <div class="form-group" id="llm-api-key-group" style="display: none;">
+                    <label for="llm-api-key">API Key</label>
+                    <input type="password" id="llm-api-key" placeholder="sk-xxxxxxxxxxxxxxxx">
+                    <small style="color: #7f8c8d; display: block; margin-top: 5px;">
+                        OpenAI 兼容服务需要 API Key，Ollama 不需要
+                    </small>
+                </div>
+
+                <details style="margin-bottom: 15px;">
+                    <summary style="cursor: pointer; color: #3498db; font-weight: 500;">▶ 高级设置</summary>
+                    <div style="padding: 15px; background: #f8f9fa; border-radius: 4px; margin-top: 10px;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="llm-max-tokens">最大输出 Tokens</label>
+                                <input type="number" id="llm-max-tokens" value="2048" min="100" max="16384">
+                            </div>
+                            <div class="form-group">
+                                <label for="llm-temperature">Temperature (生成温度)</label>
+                                <input type="number" id="llm-temperature" value="0.3" min="0" max="2" step="0.1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="llm-timeout">请求超时 (毫秒)</label>
+                            <input type="number" id="llm-timeout" value="120000" min="10000" max="600000" step="1000">
+                            <small style="color: #7f8c8d;">建议 60000-180000 (1-3分钟)</small>
+                        </div>
+                    </div>
+                </details>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="llm-enabled" checked>
+                        <span>启用 LLM 总结功能</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn" id="llm-test-btn" onclick="testLLMConnection()">🔗 测试连接</button>
+                    <button type="submit" class="btn">💾 保存配置</button>
+                </div>
+            </form>
+
+            <div id="llm-test-result" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = '';
+        
+        // 全局变量存储所有令牌
+        let allTokens = [];
+        
+        // 获取服务器地址（从当前页面 URL）
+        const serverUrl = `${window.location.protocol}//${window.location.host}`;
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadOAuthApps();
+            loadAllUserTokens(); // 加载所有用户令牌
+
+            // 设置表单提交事件
+            document.getElementById('oauth-app-form').addEventListener('submit', handleOAuthAppSubmit);
+
+            // 设置平台选择事件（更新占位符提示）
+            document.getElementById('platform').addEventListener('change', updateRedirectUriPlaceholder);
+
+            // 初始化 placeholder
+            updateRedirectUriPlaceholder();
+
+            // 设置搜索框实时过滤
+            document.getElementById('search-user').addEventListener('input', filterUserTokens);
+
+            // 初始化 LLM 配置
+            initLLMConfig();
+        });
+        
+        // 加载统计信息
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/stats`);
+                const stats = await response.json();
+                
+                document.getElementById('stat-apps').textContent = stats.oauth_apps;
+                document.getElementById('stat-tokens').textContent = stats.user_tokens;
+                document.getElementById('stat-gmail').textContent = stats.by_platform.gmail || 0;
+                document.getElementById('stat-slack').textContent = stats.by_platform.slack || 0;
+            } catch (error) {
+                console.error('加载统计信息失败:', error);
+            }
+        }
+        
+        // 加载OAuth应用列表
+        async function loadOAuthApps() {
+            try {
+                const response = await fetch(`${API_BASE}/api/oauth-apps`);
+                const apps = await response.json();
+                
+                const tableContainer = document.getElementById('oauth-apps-table');
+                
+                if (apps.length === 0) {
+                    tableContainer.innerHTML = '<div class="empty-state">暂无OAuth应用配置</div>';
+                    return;
+                }
+                
+                const table = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>应用名称</th>
+                                <th>平台</th>
+                                <th>客户端ID</th>
+                                <th>重定向URI</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${apps.map(app => `
+                                <tr>
+                                    <td><strong>${app.name || '未命名'}</strong></td>
+                                    <td><span class="platform-badge platform-${app.platform}">${app.platform}</span></td>
+                                    <td><code>${app.client_id}</code></td>
+                                    <td><small>${app.redirect_uri}</small></td>
+                                    <td><span class="status-${app.is_active ? 'active' : 'inactive'}">${app.is_active ? '启用' : '禁用'}</span></td>
+                                    <td>${new Date(app.created_at).toLocaleString()}</td>
+                                    <td>
+                                        <button class="btn btn-danger btn-small" onclick="deleteOAuthApp('${app.id}')">删除</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                tableContainer.innerHTML = table;
+            } catch (error) {
+                console.error('加载OAuth应用失败:', error);
+                document.getElementById('oauth-apps-table').innerHTML = '<div class="alert alert-error">加载失败</div>';
+            }
+        }
+        
+        // 处理OAuth应用表单提交
+        async function handleOAuthAppSubmit(event) {
+            event.preventDefault();
+            
+            const formData = {
+                platform: document.getElementById('platform').value,
+                name: document.getElementById('app-name').value,
+                client_id: document.getElementById('client-id').value,
+                client_secret: document.getElementById('client-secret').value,
+                redirect_uri: document.getElementById('redirect-uri').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/oauth-apps`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('app-alert', 'success', '✅ OAuth应用创建成功！');
+                    document.getElementById('oauth-app-form').reset();
+                    loadStats();
+                    loadOAuthApps();
+                    loadAllUserTokens(); // 刷新用户列表
+                } else {
+                    showAlert('app-alert', 'error', '❌ ' + result.error);
+                }
+            } catch (error) {
+                console.error('创建OAuth应用失败:', error);
+                showAlert('app-alert', 'error', '❌ 网络错误，请重试');
+            }
+        }
+        
+        // 更新重定向URI占位符（不自动填充值）
+        function updateRedirectUriPlaceholder() {
+            const platform = document.getElementById('platform').value;
+            const redirectUriInput = document.getElementById('redirect-uri');
+            
+            if (platform) {
+                redirectUriInput.placeholder = `${serverUrl}/oauth/callback/${platform}`;
+            } else {
+                redirectUriInput.placeholder = `${serverUrl}/oauth/callback/{platform}`;
+            }
+        }
+        
+        // 删除OAuth应用
+        async function deleteOAuthApp(appId) {
+            if (!confirm('确定要删除这个OAuth应用吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/oauth-apps/${appId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showAlert('app-alert', 'success', '✅ OAuth应用删除成功！');
+                    loadStats();
+                    loadOAuthApps();
+                    loadAllUserTokens(); // 刷新用户列表
+                } else {
+                    const result = await response.json();
+                    showAlert('app-alert', 'error', '❌ ' + result.error);
+                }
+            } catch (error) {
+                console.error('删除OAuth应用失败:', error);
+                showAlert('app-alert', 'error', '❌ 网络错误，请重试');
+            }
+        }
+        
+        // 加载所有用户令牌
+        async function loadAllUserTokens() {
+            const tableContainer = document.getElementById('user-tokens-table');
+            tableContainer.innerHTML = '<div class="loading">加载中...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/tokens`);
+                allTokens = await response.json();
+                
+                renderUserTokens(allTokens);
+            } catch (error) {
+                console.error('加载用户令牌失败:', error);
+                tableContainer.innerHTML = '<div class="alert alert-error">加载失败</div>';
+            }
+        }
+        
+        // 过滤用户令牌
+        function filterUserTokens() {
+            const searchTerm = document.getElementById('search-user').value.trim().toLowerCase();
+            
+            if (!searchTerm) {
+                renderUserTokens(allTokens);
+                return;
+            }
+            
+            const filtered = allTokens.filter(token => 
+                token.user_identifier.toLowerCase().includes(searchTerm) ||
+                (token.display_name && token.display_name.toLowerCase().includes(searchTerm)) ||
+                (token.name && token.name.toLowerCase().includes(searchTerm)) ||
+                token.platform.toLowerCase().includes(searchTerm)
+            );
+            
+            renderUserTokens(filtered);
+        }
+        
+        // 渲染用户令牌表格
+        function renderUserTokens(tokens) {
+            const tableContainer = document.getElementById('user-tokens-table');
+            
+            if (tokens.length === 0) {
+                const searchTerm = document.getElementById('search-user').value.trim();
+                if (searchTerm) {
+                    tableContainer.innerHTML = '<div class="empty-state">未找到匹配的用户令牌</div>';
+                } else {
+                    tableContainer.innerHTML = '<div class="empty-state">暂无用户令牌<br><small>在Electron应用中添加账户后会显示在这里</small></div>';
+                }
+                return;
+            }
+            
+            const table = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>平台</th>
+                            <th>OAuth应用</th>
+                            <th>用户标识</th>
+                            <th>显示名称</th>
+                            <th>过期时间</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tokens.map(token => {
+                            const expiresAt = token.expires_at ? new Date(token.expires_at) : null;
+                            const isExpired = expiresAt && expiresAt < new Date();
+                            const expiresText = expiresAt 
+                                ? `${expiresAt.toLocaleString()} ${isExpired ? '❌ 已过期' : '✅'}` 
+                                : '永不过期';
+                            
+                            return `
+                                <tr>
+                                    <td><span class="platform-badge platform-${token.platform}">${token.platform}</span></td>
+                                    <td>${token.app_name || '未命名'}</td>
+                                    <td><code>${token.user_identifier}</code></td>
+                                    <td>${token.name || token.display_name || '-'}</td>
+                                    <td><small>${expiresText}</small></td>
+                                    <td><small>${new Date(token.created_at).toLocaleString()}</small></td>
+                                    <td>
+                                        <button class="btn btn-danger btn-small" onclick="deleteUserToken('${token.id}')">删除</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            tableContainer.innerHTML = table;
+        }
+        
+        // 删除用户令牌
+        async function deleteUserToken(tokenId) {
+            if (!confirm('确定要删除这个用户令牌吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/tokens/${tokenId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('✅ 用户令牌删除成功！');
+                    loadAllUserTokens(); // 重新加载所有用户
+                    loadStats(); // 更新统计
+                } else {
+                    const result = await response.json();
+                    alert('❌ ' + result.error);
+                }
+            } catch (error) {
+                console.error('删除用户令牌失败:', error);
+                alert('❌ 网络错误，请重试');
+            }
+        }
+        
+        // 显示提示信息
+        function showAlert(containerId, type, message) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 3000);
+        }
+
+        // ==================== LLM 配置相关 ====================
+
+        // 加载 LLM 配置
+        async function loadLLMConfig() {
+            try {
+                const response = await fetch(`${API_BASE}/api/llm/config`);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    const config = result.data;
+
+                    // 设置 provider
+                    document.querySelector(`input[name="llm-provider"][value="${config.provider}"]`).checked = true;
+                    updateLLMProviderUI();
+
+                    // 设置其他字段
+                    document.getElementById('llm-base-url').value = config.baseUrl || '';
+                    document.getElementById('llm-model').value = config.model || '';
+                    document.getElementById('llm-api-key').value = config.apiKey || '';
+                    document.getElementById('llm-max-tokens').value = config.maxTokens || 2048;
+                    document.getElementById('llm-temperature').value = config.temperature || 0.3;
+                    document.getElementById('llm-timeout').value = config.timeout || 120000;
+                    document.getElementById('llm-enabled').checked = config.isEnabled;
+                }
+            } catch (error) {
+                console.error('加载 LLM 配置失败:', error);
+            }
+        }
+
+        // 更新 LLM Provider UI
+        function updateLLMProviderUI() {
+            const provider = document.querySelector('input[name="llm-provider"]:checked').value;
+            const apiKeyGroup = document.getElementById('llm-api-key-group');
+            const urlHint = document.getElementById('llm-url-hint');
+            const modelHint = document.getElementById('llm-model-hint');
+
+            if (provider === 'ollama') {
+                apiKeyGroup.style.display = 'none';
+                urlHint.textContent = 'Ollama 默认: http://localhost:11434';
+                modelHint.textContent = 'Ollama 示例: qwen2.5:7b, llama3:8b';
+            } else {
+                apiKeyGroup.style.display = 'block';
+                urlHint.textContent = 'OpenAI: https://api.openai.com | DeepSeek: https://api.deepseek.com';
+                modelHint.textContent = 'OpenAI: gpt-4o, gpt-3.5-turbo | DeepSeek: deepseek-chat';
+            }
+        }
+
+        // 保存 LLM 配置
+        async function saveLLMConfig(event) {
+            event.preventDefault();
+
+            const provider = document.querySelector('input[name="llm-provider"]:checked').value;
+            const config = {
+                provider,
+                baseUrl: document.getElementById('llm-base-url').value,
+                apiKey: document.getElementById('llm-api-key').value,
+                model: document.getElementById('llm-model').value,
+                maxTokens: parseInt(document.getElementById('llm-max-tokens').value),
+                temperature: parseFloat(document.getElementById('llm-temperature').value),
+                timeout: parseInt(document.getElementById('llm-timeout').value),
+                isEnabled: document.getElementById('llm-enabled').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/llm/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('llm-alert', 'success', '✅ LLM 配置保存成功！');
+                } else {
+                    showAlert('llm-alert', 'error', '❌ ' + result.error);
+                }
+            } catch (error) {
+                console.error('保存 LLM 配置失败:', error);
+                showAlert('llm-alert', 'error', '❌ 网络错误，请重试');
+            }
+        }
+
+        // 测试 LLM 连接
+        async function testLLMConnection() {
+            const provider = document.querySelector('input[name="llm-provider"]:checked').value;
+            const testData = {
+                provider,
+                baseUrl: document.getElementById('llm-base-url').value,
+                apiKey: document.getElementById('llm-api-key').value,
+                model: document.getElementById('llm-model').value
+            };
+
+            const resultDiv = document.getElementById('llm-test-result');
+            const testBtn = document.getElementById('llm-test-btn');
+
+            testBtn.disabled = true;
+            testBtn.textContent = '⏳ 测试中...';
+            resultDiv.innerHTML = '<div class="loading">正在测试连接...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/llm/test`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    let modelsInfo = '';
+                    if (result.availableModels && result.availableModels.length > 0) {
+                        modelsInfo = `<br><small>可用模型: ${result.availableModels.slice(0, 5).join(', ')}${result.availableModels.length > 5 ? '...' : ''}</small>`;
+                    }
+                    const modelStatus = result.modelExists
+                        ? '✅ 模型已安装'
+                        : '⚠️ 模型可能未安装';
+
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            ✅ 连接成功！响应时间: ${result.responseTime}ms
+                            <br>${modelStatus}
+                            ${modelsInfo}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-error">
+                            ❌ ${result.error}
+                            <br><small>响应时间: ${result.responseTime}ms</small>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('测试 LLM 连接失败:', error);
+                resultDiv.innerHTML = `
+                    <div class="alert alert-error">
+                        ❌ 网络错误，请检查服务地址
+                    </div>
+                `;
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = '🔗 测试连接';
+            }
+        }
+
+        // 初始化 LLM 配置表单事件
+        function initLLMConfig() {
+            // Provider 切换事件
+            document.querySelectorAll('input[name="llm-provider"]').forEach(radio => {
+                radio.addEventListener('change', updateLLMProviderUI);
+            });
+
+            // 表单提交事件
+            document.getElementById('llm-config-form').addEventListener('submit', saveLLMConfig);
+
+            // 加载现有配置
+            loadLLMConfig();
+        }
+    </script>
+</body>
+</html>

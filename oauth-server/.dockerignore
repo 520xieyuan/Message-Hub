@@ -1,0 +1,8 @@
+node_modules
+npm-debug.log
+*.md
+.git
+.gitignore
+*.db-journal
+*.db-wal
+*.db-shm

@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  oauth-server:
+    build: .
+    container_name: oauth-server
+    ports:
+      - "3000:3000"
+    volumes:
+      # 持久化数据库文件
+      - ./oauth_server.db:/app/oauth_server.db
+      # 如果需要持久化 accounts.db
+      - ./accounts.db:/app/accounts.db
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/stats', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
